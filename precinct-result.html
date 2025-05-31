@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Election Results Viewer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #f4f4f4; }
+    .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+    h2, h3 { color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>Precinct Election Results Viewer</h1>
+  <div id="results"></div>
+
+  <script>
+    const startId = 14100001;
+    const endId = 14100165;
+
+    const container = document.getElementById('results');
+
+    const renderPrecinct = (data) => {
+      const info = data.information;
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'container';
+      infoDiv.innerHTML = `
+        <h2>Precinct ${info.precinctId}</h2>
+        <p><strong>Location:</strong> ${info.location}</p>
+        <p><strong>Voting Center:</strong> ${info.votingCenter}</p>
+        <p><strong>Precincts in Cluster:</strong> ${info.precinctInCluster}</p>
+        <p><strong>Registered Voters:</strong> ${info.numberOfRegisteredVoters}</p>
+        <p><strong>Actually Voted:</strong> ${info.numberOfActuallyVoters}</p>
+        <p><strong>Valid Ballots:</strong> ${info.numberOfValidBallot}</p>
+        <p><strong>Turnout:</strong> ${info.turnout}%</p>
+      `;
+      container.appendChild(infoDiv);
+
+      const renderContests = (contests, title) => {
+        contests.forEach(contest => {
+          const contestDiv = document.createElement('div');
+          contestDiv.className = 'container';
+
+          let stat = contest.statistic;
+          let table = `<table>
+            <thead><tr><th>Candidate</th><th>Votes</th><th>Percentage</th></tr></thead>
+            <tbody>`;
+
+          contest.candidates.candidates.forEach(candidate => {
+            table += `<tr><td>${candidate.name}</td><td>${candidate.votes}</td><td>${candidate.percentage}%</td></tr>`;
+          });
+          table += `</tbody></table>`;
+
+          contestDiv.innerHTML = `
+            <h3>${contest.contestName} (${title})</h3>
+            <p><strong>Over Votes:</strong> ${stat.overVotes}, <strong>Under Votes:</strong> ${stat.underVotes}, <strong>Valid Votes:</strong> ${stat.validVotes}, <strong>Obtained Votes:</strong> ${stat.obtainedVotes}</p>
+            ${table}
+          `;
+          container.appendChild(contestDiv);
+        });
+      };
+
+      renderContests(data.national, 'National');
+      renderContests(data.local, 'Local');
+    };
+
+    const fetchData = async (id) => {
+      try {
+        const res = await fetch(`er_results/${id}.json`);
+        if (!res.ok) throw new Error(`HTTP status ${res.status}`);
+        const data = await res.json();
+        renderPrecinct(data);
+      } catch (error) {
+        console.warn(`Skipping ${id}.json: ${error.message}`);
+      }
+    };
+
+    for (let id = startId; id <= endId; id++) {
+      fetchData(id);
+    }
+  </script>
+</body>
+</html>
