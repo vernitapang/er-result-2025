@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Election Results Viewer</title>
+  <title>Precinct Election Results Viewer</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 2rem; background: #f4f4f4; }
     .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem; }
@@ -10,6 +10,79 @@
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #f0f0f0; }
+    .collapsible {
+      background-color: #777;
+      color: white;
+      cursor: pointer;
+      padding: 18px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease;
+    }
+    .collapsible:after {
+      content: '\002B';
+      font-size: 24px;
+      color: white;
+      float: right;
+    }
+    .collapsible.active:after {
+      content: "\2212";
+    }
+    .collapsible-content {
+      padding: 0 18px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease-out;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+    .highlight {
+      background-color: rgb(255, 255, 118);
+    }
+
+    .precinct {
+      margin-bottom: 1rem;
+      background: var(--container-bg-color);
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 0;
+    }
+
+    .precinct-header {
+      padding: 1rem;
+      text-align: left;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      background: var(--primary-color);
+      color: #fff;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .precinct-content {
+      padding: 0 1rem 1rem;
+      display: none;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .precinct-header:after {
+      content: '+';
+      float: right;
+      font-size: 1.5rem;
+      line-height: 1.5rem;
+    }
+
+    .precinct-header.active:after {
+      content: '-';
+    }
   </style>
 </head>
 <body>
@@ -53,11 +126,28 @@
           });
           table += `</tbody></table>`;
 
-          contestDiv.innerHTML = `
-            <h3>${contest.contestName} (${title})</h3>
+          const collapsible = document.createElement('button');
+          collapsible.className = 'collapsible';
+          collapsible.innerHTML = `${title} - ${contest.contestName}`;
+          collapsible.onclick = function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.maxHeight){
+              content.style.maxHeight = null;
+            } else {
+              content.style.maxHeight = content.scrollHeight + "px";
+            } 
+          };
+          contestDiv.appendChild(collapsible);
+
+          const content = document.createElement('div');
+          content.className = 'collapsible-content';
+          content.innerHTML = `
             <p><strong>Over Votes:</strong> ${stat.overVotes}, <strong>Under Votes:</strong> ${stat.underVotes}, <strong>Valid Votes:</strong> ${stat.validVotes}, <strong>Obtained Votes:</strong> ${stat.obtainedVotes}</p>
             ${table}
           `;
+          contestDiv.appendChild(content);
+
           container.appendChild(contestDiv);
         });
       };
@@ -83,3 +173,5 @@
   </script>
 </body>
 </html>
+
+
