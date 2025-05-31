@@ -5,11 +5,17 @@
   <title>2025 Election Results - MAL</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    @media (max-width: 700px) {
+      .navbar {
+        flex-direction: column;
+      }
+    }
+
     :root {
       --bg-color: #f4f4f4;
-      --text-color: #333;
+      --text-color: #1b1b1b;
       --container-bg-color: white;
-      --primary-color: #007BFF;
+      --primary-color: rgb(174, 191, 211);
       --highlight-color: #fff38c;
       --font-family: 'Roboto', sans-serif;
     }
@@ -19,6 +25,8 @@
       margin: 2rem;
       background: var(--bg-color);
       color: var(--text-color);
+      max-width: 1200px;
+      margin: 2rem auto 0;
     }
 
     .navbar {
@@ -61,32 +69,53 @@
       background-color: #f0f0f0;
     }
 
-    .toggle-btn {
-      margin-top: 10px;
-      margin-bottom: 10px;
-      padding: 6px 12px;
+    .collapsible {
       background-color: var(--primary-color);
-      color: white;
-      border: none;
-      border-radius: 4px;
+      color: #000000;
       cursor: pointer;
+      padding: 18px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
       transition: background-color 0.3s ease;
     }
 
-    .toggle-btn:hover, .toggle-btn:focus {
-      background-color: darken(var(--primary-color), 10%);
+    .collapsible:after {
+      content: '\002B';
+      font-size: 24px;
+      color: white;
+      float: right;
+    }
+
+    .collapsible.active:after {
+      content: "\2212";
+    }
+
+    .collapsible-content {
+      padding: 0 18px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.2s ease-out;
+      background-color: #f9f9f9;
+      border-radius: 5px;
     }
 
     .highlight {
-      background-color: var(--highlight-color);
-      font-weight: bold;
+      background-color: rgb(255, 255, 118);
     }
 
     .view-precinct-btn {
       padding: 10px 15px;
       background-color: var(--primary-color);
-      color: white;
+      color: rgb(0, 0, 0);
       text-decoration: none;
+      font-weight: bold;
       border-radius: 4px;
       transition: background-color 0.3s ease;
     }
@@ -98,13 +127,13 @@
 </head>
 <body>
   <div class="navbar">
-    <div class="navbar-brand">2025 Election Results Dashboard - Malolos, Bulacan</div>
+    <div class="navbar-brand">2️⃣0️⃣2️⃣5️⃣ Election Results Dashboard - Malolos, Bulacan</div>
     <a href="precinct-result.html" class="view-precinct-btn">View Precinct Results</a>
   </div>
   <div id="dashboard"></div>
 
   <script>
-    const startId = 14100009;
+    const startId = 14100001;
     const endId = 14100165;
     const dashboard = document.getElementById('dashboard');
 
@@ -138,38 +167,68 @@
     };
 
     const renderDashboard = () => {
+      const dashboard = document.getElementById('dashboard');
+
       for (const race in aggregate) {
         const raceDiv = document.createElement('div');
         raceDiv.className = 'container';
-        raceDiv.innerHTML = `<h2>${race}</h2>`;
 
-        const toggleBtn = document.createElement('button');
-        toggleBtn.textContent = 'Hide';
-        toggleBtn.className = 'toggle-btn';
-        const tableContainer = document.createElement('div');
+        const collapsibleButton = document.createElement('button');
+        collapsibleButton.className = 'collapsible';
+        collapsibleButton.textContent = race;
 
-        let table = `<table><thead><tr><th>#</th><th>Candidate</th><th>Total Votes</th></tr></thead><tbody>`;
-        const sortedCandidates = Object.entries(aggregate[race]).sort((a, b) => b[1] - a[1]);
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'collapsible-content';
+
+        // Start the table with headers
+        let table = `<table>
+                      <thead>
+                        <tr>
+                          <th>Rank</th>
+                          <th>Candidate</th>
+                          <th>Votes</th>
+                        </tr>
+                      </thead>
+                      <tbody>`;
+
+        // Sort the candidates by votes and add table rows
+        const candidates = Object.entries(aggregate[race]).sort((a, b) => b[1] - a[1]);
         const highlightLimit = getHighlightLimit(race);
-
-        sortedCandidates.forEach(([name, votes], index) => {
+        candidates.forEach(([name, votes], index) => {
           const highlightClass = index < highlightLimit ? 'highlight' : '';
-          table += `<tr class="${highlightClass}"><td>${index + 1}</td><td>${name}</td><td>${votes}</td></tr>`;
+          table += `<tr class="${highlightClass}">
+                      <td>${index + 1}</td>
+                      <td>${name}</td>
+                      <td>${votes}</td>
+                    </tr>`;
         });
+
+        // Close the table
         table += `</tbody></table>`;
 
-        tableContainer.innerHTML = table;
-        raceDiv.appendChild(toggleBtn);
-        raceDiv.appendChild(tableContainer);
+        // Set the table as the innerHTML of the contentDiv
+        contentDiv.innerHTML = table;
 
-        toggleBtn.onclick = () => {
-          const isHidden = tableContainer.style.display === 'none';
-          tableContainer.style.display = isHidden ? 'block' : 'none';
-          toggleBtn.textContent = isHidden ? 'Hide' : 'Show';
-        };
+        // Append the button and content div to the raceDiv
+        raceDiv.appendChild(collapsibleButton);
+        raceDiv.appendChild(contentDiv);
 
+        // Append the raceDiv to the dashboard
         dashboard.appendChild(raceDiv);
       }
+
+      // Add click event listeners for collapsible buttons
+      document.querySelectorAll('.collapsible').forEach(collapsible => {
+        collapsible.addEventListener('click', function() {
+          this.classList.toggle('active');
+          var content = this.nextElementSibling;
+          if (content.style.maxHeight) {
+            content.style.maxHeight = null;
+          } else {
+            content.style.maxHeight = content.scrollHeight + "px";
+          }
+        });
+      });
     };
 
     const fetchData = async (id) => {
@@ -197,3 +256,5 @@
   </script>
 </body>
 </html>
+
+
